@@ -21,6 +21,9 @@ PORT = 8000
 SNAPCHAT_HTML_DIR: str | None = '../mydata/'
 SNAPCHAT_HTML_MEMORIES: LiteralString = f'http://localhost:{PORT}/html/memories_history.html'
 
+class SnapchatMemoriesDownloader():
+    pass
+
 def _getRawLink(func) -> None:
     match = re.search(r"'(https://[^']+)'", func)
     return match.group(1) if match else None
@@ -36,6 +39,9 @@ def getWebPageText(url: str = SNAPCHAT_HTML_MEMORIES) -> requests.Response:
     """
     print(f"[REQUEST] Requesting a raw HTML string from {url}")
     return requests.get(url)
+
+def downloadMemories() -> None:
+    pass
 
 def runServer() -> None:
     """
@@ -57,6 +63,7 @@ def runBeautifulSoup() -> None:
     soup = BeautifulSoup(markup=page.text, features='html.parser')
     table = soup.find("tbody")
     a_tag = table.find_all_next('a')
+    print(f'Found {len(a_tag)} images and videos!')
     for a in a_tag:
         _a = a.get('onclick')
         # print(_getRawLink(_a))
