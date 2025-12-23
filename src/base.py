@@ -9,9 +9,12 @@ import re
 from http.server import HTTPServer, BaseHTTPRequestHandler, SimpleHTTPRequestHandler
 from functools import partial
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
 from typing import LiteralString
+
+# c-like structs
+from dataclasses import dataclass
 
 from . import main
 
@@ -21,45 +24,46 @@ PORT = 8000
 SNAPCHAT_HTML_DIR: str | None = '../mydata/'
 SNAPCHAT_HTML_MEMORIES: LiteralString = f'http://localhost:{PORT}/html/memories_history.html'
 
-class SnapchatMemoriesDownloader():
-    pass
+@dataclass
+class Config:
+    port: int = 8000
+    snapchat_html_directory: str = '../mydata/'
+    snapchat_html_memories: LiteralString = f'http://localhost:{PORT}/html/memories_history.html'
 
-def _getRawLink(func) -> None:
-    match = re.search(r"'(https://[^']+)'", func)
+class SnapchatMemoriesDownloader():
+    ...
+
+def get_raw_links(tag: Tag) -> str:
+    match = re.search(r"'(https://[^']+)'", tag)
     return match.group(1) if match else None
 
-def getWebPageText(url: str = SNAPCHAT_HTML_MEMORIES) -> requests.Response:
-    """
-    getWebPageText is designed to return HTML data for BeautifulSoup4 to scrape through.
-    
-    :param url: Web page URL string to get HTML data from.
-    :type url: str
-    :return: Returns a text string of raw HTML data from the get requested web path.
-    :rtype: Response
-    """
-    print(f"[REQUEST] Requesting a raw HTML string from {url}")
+def get_webpage_text(url: Config) -> requests.Response:
     return requests.get(url)
 
-def downloadMemories() -> None:
-    pass
+def download_memories() -> None:
+    ...
 
-def runServer() -> None:
+def create_http_server(config: Config) -> HTTPServer:
+    config = Config()
+    print(f"[SERVER] Serving {config.snapchat_html_directory} at http://localhost:{config.port}")
+    handler = partial(SimpleHTTPRequestHandler, directory=config.snapchat_html_directory)
+    return HTTPServer(("localhost", config.port), handler)
+
+def run_server() -> None:
     """
     runServer function with no args.\n
     Purpose of this function is to start a server on thread-1,
     whilst "serving" forever.
     """
-    handler: partial[SimpleHTTPRequestHandler] = partial(SimpleHTTPRequestHandler, directory=SNAPCHAT_HTML_DIR)
-    http_server: HTTPServer = HTTPServer(("localhost", PORT), handler)
-    print(f"[SERVER] Serving {SNAPCHAT_HTML_DIR} at http://localhost:{PORT}")
+    http_server = create_http_server()
     http_server.serve_forever()
 
-def runBeautifulSoup() -> None:
+def run_beautiful_soup() -> None:
     """
     Docstring for runBeautifulSoup
     """
     time.sleep(1.5)
-    page = getWebPageText(SNAPCHAT_HTML_MEMORIES)
+    page = get_webpage_text(SNAPCHAT_HTML_MEMORIES)
     soup = BeautifulSoup(markup=page.text, features='html.parser')
     table = soup.find("tbody")
     a_tag = table.find_all_next('a')
