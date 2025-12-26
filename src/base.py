@@ -6,6 +6,8 @@ import requests
 
 import re
 
+import threading
+
 from http.server import HTTPServer, BaseHTTPRequestHandler, SimpleHTTPRequestHandler
 from functools import partial
 
@@ -13,40 +15,22 @@ from bs4 import BeautifulSoup, Tag
 
 from typing import LiteralString
 
-# c-like structs
 from dataclasses import dataclass
 
-from . import main
+from threading import Thread
 
-# Config
-# TODO: this needs to be in venv upon when feeding information via command line
-PORT = 8000
-SNAPCHAT_HTML_DIR: str | None = '../mydata/'
-SNAPCHAT_HTML_MEMORIES: LiteralString = f'http://localhost:{PORT}/html/memories_history.html'
+from . import main
 
 @dataclass
 class Config:
     port: int = 8000
-    snapchat_html_directory: str = '../mydata/'
-    snapchat_html_memories: LiteralString = f'http://localhost:{PORT}/html/memories_history.html'
-
-class SnapchatMemoriesDownloader():
-    ...
-
-def get_raw_links(tag: Tag) -> str:
-    match = re.search(r"'(https://[^']+)'", tag)
-    return match.group(1) if match else None
-
-def get_webpage_text(url: Config) -> requests.Response:
-    return requests.get(url)
-
-def download_memories() -> None:
-    ...
+    directory: str = '../mydata/'
+    memories: LiteralString = f'http://localhost:{port}/html/memories_history.html'
 
 def create_http_server(config: Config) -> HTTPServer:
     config = Config()
-    print(f"[SERVER] Serving {config.snapchat_html_directory} at http://localhost:{config.port}")
-    handler = partial(SimpleHTTPRequestHandler, directory=config.snapchat_html_directory)
+    print(f"[SERVER] Serving {config.directory} at http://localhost:{config.port}")
+    handler = partial(SimpleHTTPRequestHandler, directory=config.directory)
     return HTTPServer(("localhost", config.port), handler)
 
 def run_server() -> None:
@@ -72,3 +56,37 @@ def run_beautiful_soup() -> None:
         _a = a.get('onclick')
         # print(_getRawLink(_a))
     print("Done")
+
+class LinkExtractor():
+    ...
+
+class ThreadCreator():
+    def server_thread(self, func) -> Thread:
+        return threading.Thread(target="")
+
+    def soup_thread(self, func) -> Thread:
+        return threading.Thread(target="")
+
+class SnapchatMemoriesDownloader():
+    def __init__(self):
+        self.threads = ThreadCreator()
+        
+    def run(self) -> None:
+        self.threads.server_thread()
+        self.threads.soup_thread()
+
+def general_information() -> None:
+    """Function printing general information about the script. 7 days left to download your data, etc."""
+    last_modified: float = os.path.getmtime(...)
+
+def get_raw_links(tag: Tag) -> str:
+    match = re.search(r"'(https://[^']+)'", tag)
+    return match.group(1) if match else None
+
+def get_webpage_text(url: str) -> str:
+    """Pass in url to get text of a page in string returned."""
+    r = requests.get(url)
+    return r.text
+
+def download_memories() -> None:
+    ...
