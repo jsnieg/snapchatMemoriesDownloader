@@ -41,23 +41,31 @@ def create_http_server() -> HTTPServer:
     except:
         raise "Server could not be created."
 
-def general_information():
+def general_information() -> None:
     """Function printing general information about the script. 7 days left to download your data, etc."""
-    # https://stackoverflow.com/questions/237079/how-do-i-get-file-creation-and-modification-date-times
-    dt = None
+    if os.path.isdir(config.directory):
+        print(f'{config.directory} exists.')
+    else:
+        raise f"{config.directory} has not been found, make sure you've requested your data from Snapchat."
+
+    # Get date of last modified/created date of directory.
+    directory_date = None
     if platform.system() == 'Windows':
-        dt = os.path.getmtime(config.directory)
+        directory_date = os.path.getmtime(config.directory)
     else:
         stat = os.stat(config.directory)
         try:
-            dt = datetime.fromtimestamp(stat.st_birthtime)
+            directory_date = datetime.fromtimestamp(stat.st_birthtime)
         except AttributeError as exception:
             btime = statx(config.directory).btime
             if btime: 
-                dt = datetime.fromtimestamp(btime)
+                directory_date = datetime.fromtimestamp(btime)
 
-    expiry = dt + timedelta(days=7)
-    return
+    now = datetime.now()
+    difference = now - directory_date
+
+    if difference.days > 7:
+        print(f'{config.directory} is older than 7 days, meaning your data is no longer available to download. Please request new data from Snapchat.')
 
 def get_raw_links(tag: Tag) -> str:
     """Get raw download links when a Tag from BS4 is passed through. This will let _download_memories(parameter)_ download all wanted files."""
@@ -89,7 +97,8 @@ def run_beautiful_soup() -> None:
         urls.append(get_raw_links(tag))
     print(urls[0])
     # urlretrieve(urls[0], 'testfile')
-    print(f'last modified: {general_information()}')
+    # print(f'last modified: {general_information()}')
+    general_information()
 
 # class SnapchatMemoriesDownloader(Config):
 #     def __init__(self):
