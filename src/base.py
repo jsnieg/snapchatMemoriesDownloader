@@ -27,12 +27,12 @@ from . import main
 class Config:
     port: int = 8000
     directory: str = '../mydata'
-    memories: LiteralString = f'http://localhost:{port}/html/memories_history.html'
+    memories: str = f'http://localhost:{port}/html/memories_history.html'
 
 config = Config()
 urls: list[str] = []
 
-def create_http_server() -> HTTPServer:
+def create_http_server(config: Config) -> HTTPServer:
     """Create HTTP server at a given port by the config dataclass (struct)."""
     print(f"[SERVER] Serving {config.directory} at http://localhost:{config.port}")
     try:
@@ -41,7 +41,7 @@ def create_http_server() -> HTTPServer:
     except:
         raise "Server could not be created."
 
-def general_information() -> None:
+def general_information(config: Config) -> None:
     """Function printing general information about the script. 7 days left to download your data, etc."""
     if os.path.isdir(config.directory):
         print(f'{config.directory} exists.')
@@ -64,7 +64,7 @@ def general_information() -> None:
     now = datetime.now()
     difference = now - directory_date
 
-    if difference.days > 7:
+    if difference.days >= 7:
         print(f'{config.directory} is older than 7 days, meaning your data is no longer available to download. Please request new data from Snapchat.')
 
 def get_raw_links(tag: Tag) -> str:
@@ -79,12 +79,12 @@ def get_webpage_text(url: str) -> str:
     r = requests.get(url)
     return r.text
 
-def run_server() -> None:
+def run_server(config: Config) -> None:
     """Create and run server forever in Thread-1."""
-    http_server = create_http_server()
+    http_server = create_http_server(config)
     http_server.serve_forever()
 
-def run_beautiful_soup() -> None:
+def run_beautiful_soup(config: Config) -> None:
     """The brains behind this script. Runs BS4, looping through raw HTML finding all tags required to find download links. Creates new Thread instance working separately."""
     time.sleep(1.5)
     page: str = get_webpage_text(config.memories)
@@ -98,7 +98,6 @@ def run_beautiful_soup() -> None:
     print(urls[0])
     # urlretrieve(urls[0], 'testfile')
     # print(f'last modified: {general_information()}')
-    general_information()
 
 # class SnapchatMemoriesDownloader(Config):
 #     def __init__(self):
