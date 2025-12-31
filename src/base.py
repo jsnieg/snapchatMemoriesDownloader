@@ -1,4 +1,5 @@
 import os
+import shutil
 import platform
 
 import time
@@ -14,23 +15,26 @@ from bs4 import BeautifulSoup, Tag
 
 from dataclasses import dataclass
 
-from urllib.request import urlretrieve
-
 from datetime import datetime, timedelta
 
 from statx import statx
 
 from requests import Request, Response
 
+# from tqdm import tqdm
+
 @dataclass
 class Config:
     port: int = 8000
     directory: str = '../mydata'
     memories: str = f'http://localhost:{port}/html/memories_history.html'
+    source_dir: str = '../data'
+    target_dir: str = '?'
 
 
 config = Config()
 urls: list[str] = []
+total_length: int = 0
 
 
 def create_http_server(config: Config) -> HTTPServer:
@@ -97,9 +101,9 @@ def get_raw_links(tag: Tag) -> str:
     return match.group(1) if match else None
 
 
-def get_webpage_response(url: str, once: bool) -> Response:
+def get_webpage_response(url: str, once: bool, stream: bool = False) -> Response:
     """Pass in url to get response from the page in string returned."""
-    res = requests.get(url)
+    res = requests.get(url, stream=stream)
     # Needed or not? Downloading and saving will take long enough before rate limiter kicks in.
     # delay: int | float = 0 if once == True else 0.75
     # time.sleep(delay)
@@ -127,20 +131,39 @@ def run_beautiful_soup(config: Config) -> None:
     for tags in a_tags:
         tag = tags.get('onclick')
         urls.append(get_raw_links(tag))
-    for url in urls:
-        download(url)
-    # download(urls)
-    # download(urls[0])
+    # for url in urls:
+    #     download(config, url)
+    download(config, urls[0])
 
 
-def download(url: str) -> None:
+def download(config: Config, url: str) -> None:
     """Download files from the URL provided and save it to respective file type and name."""
-    res: Response = get_webpage_response(url, False)
-    file_type: str = res.headers['Content-Type']
+    if url == "" or url is None: assert False, "Empty url was fed to the download function."
+    res: Response = get_webpage_response(url, False, True)
     content_name: str = res.headers['Content-Disposition']
+    current_length: int = int(res.headers['Content-Length'])
+    # total_length += current_length
     file_name: str = content_name.split(";")[1].split('=')[1].strip('"') # I could've used regex here, but I already did so enjoy this.
+    if not os.path.exists(config.source_dir):
+        os.makedirs(config.source_dir)
+    with open(f'{config.source_dir}/{file_name}', 'wb') as f:
+        print(f'Downloading {file_name}...')
+        for chunk in res.iter_content(chunk_size=1024):
+            if chunk:
+                f.write(chunk)
+                f.flush()
+    print('Download completed. Moving files to...')
+    move_files()
 
 
 def move_files() -> None:
     """Function to move files downloaded from one directory to another directory of user's choosing."""
-    ...
+    print("Moving files...")
+    match platform.system():
+        case 'Linux':
+            # Linux needs to move from here to /mnt/d/ whichis in Windows.
+            print('Linux!')
+        case 'Windows':
+            ...
+        case _:
+            ...
