@@ -23,6 +23,11 @@ from requests import Request, Response
 
 # from tqdm import tqdm
 
+### DEBUGS [DELETE WHEN NOT NEEEDED] ###
+urls: list[str] = []
+total_length: int = 0
+
+
 @dataclass
 class Config:
     port: int = 8000
@@ -36,11 +41,6 @@ class quietServer(SimpleHTTPRequestHandler):
     """Classs inherting to silence the HTTP server's logs."""
     def log_message(self, format, *args):
         pass
-
-
-config = Config()
-urls: list[str] = []
-total_length: int = 0
 
 
 def create_http_server(config: Config) -> HTTPServer:
