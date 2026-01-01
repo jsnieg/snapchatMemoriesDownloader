@@ -19,4 +19,4 @@ Install all required packages to run the script in virutal environment:
 - `(env) pip install -r ./requirements.txt`
 
 To run the script from source:
-- `(env) python -m src.main`
+- `(env) python3 -m src.main`
