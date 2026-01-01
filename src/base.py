@@ -28,8 +28,14 @@ class Config:
     port: int = 8000
     directory: str = '../mydata'
     memories: str = f'http://localhost:{port}/html/memories_history.html'
-    source_dir: str = '../data'
+    source_dir: str = '../files'
     target_dir: str = '?'
+
+
+class quietServer(SimpleHTTPRequestHandler):
+    """Classs inherting to silence the HTTP server's logs."""
+    def log_message(self, format, *args):
+        pass
 
 
 config = Config()
@@ -41,7 +47,7 @@ def create_http_server(config: Config) -> HTTPServer:
     """Create HTTP server at a given port by the config dataclass (struct)."""
     print(f"[SERVER] Serving {config.directory} at http://localhost:{config.port}")
     try:
-        handler = partial(SimpleHTTPRequestHandler, directory=config.directory)
+        handler = partial(quietServer, directory=config.directory)
         return HTTPServer(("localhost", config.port), handler)
     except:
         raise "Server could not be created."
@@ -60,34 +66,20 @@ def dir_modified_date(config: Config) -> timedelta:
             btime = statx(config.directory).btime
             if btime: 
                 directory_date = datetime.fromtimestamp(btime)
-    now = datetime.now()
+    now: datetime = datetime.now()
     return now - directory_date
 
 
 def check_directory(config: Config) -> None:
     """Function to check if directory is not older than 7 days and whether it does exist."""
-    directory_date = None
-    now = datetime.now()
+    directory_date = dir_modified_date(config)
 
     if os.path.isdir(config.directory):
         assert True
     else:
-        assert False, f"{config.directory} has not been found, make sure you've requested your data from Snapchat."
+        assert False, f"{config.directory} has not been found, make sure you've requested your data from Snapchat and that it is inside your designated directory."
 
-    if platform.system() == 'Windows':
-        directory_date = os.path.getmtime(config.directory)
-    else:
-        stat = os.stat(config.directory)
-        try:
-            directory_date = datetime.fromtimestamp(stat.st_birthtime)
-        except AttributeError as exception:
-            btime = statx(config.directory).btime
-            if btime: 
-                directory_date = datetime.fromtimestamp(btime)
-    
-    d = now - directory_date
-
-    if d.days >= 7:
+    if directory_date.days >= 7:
         assert False, f'{config.directory} is older than 7 days, meaning your data is no longer available to download. Please request new data from Snapchat.'
     else:
         assert True, f'{config.directory} is not older than 7 days.'
@@ -161,7 +153,7 @@ def move_files() -> None:
     print("Moving files...")
     match platform.system():
         case 'Linux':
-            # Linux needs to move from here to /mnt/d/ whichis in Windows.
+            # Linux needs to move from here to /mnt/d/ which is in Windows.
             print('Linux!')
         case 'Windows':
             ...
