@@ -148,6 +148,14 @@ def download(config: Config, url: str) -> None:
     move_files()
 
 
+def move_files_linux():
+    ...
+
+
+def move_files_windows():
+    ...
+
+
 def move_files() -> None:
     """Function to move files downloaded from one directory to another directory of user's choosing."""
     print("Moving files...")
