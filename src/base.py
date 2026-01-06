@@ -31,11 +31,14 @@ total_length: int = 0
 @dataclass
 class Config:
     port: int = 8000
+    # Directory of memories saved.
     directory: str = '../mydata'
+    # Downloaded files.
+    source_dir: str = '../files'
+    # Where your files will go to after download and as you invoke moving files.
+    target_dir: str = '?'
     memories: str = f'http://localhost:{port}/html/memories_history.html'
     feature_parser: str = 'html.parser'
-    source_dir: str = '../files'
-    target_dir: str = '?'
 
 
 class quietServer(SimpleHTTPRequestHandler):
@@ -73,7 +76,12 @@ def dir_modified_date(config: Config) -> timedelta:
 
 def check_directory(config: Config) -> None:
     """Function to check if directory is not older than 7 days and whether it does exist."""
+    print(config.target_dir)
+
     directory_date = dir_modified_date(config)
+
+    if not os.path.exists(config.source_dir):
+        os.makedirs(config.source_dir)
 
     if os.path.isdir(config.directory):
         assert True
@@ -142,8 +150,6 @@ def download(config: Config, url: str) -> None:
     current_length: int = int(res.headers['Content-Length'])
     # total_length += current_length
     file_name: str = content_name.split(";")[1].split('=')[1].strip('"') # I could've used regex here, but I already did so enjoy this.
-    if not os.path.exists(config.source_dir):
-        os.makedirs(config.source_dir)
     with open(f'{config.source_dir}/{file_name}', 'wb') as f:
         print(f'Downloading {file_name}...')
         for chunk in res.iter_content(chunk_size=1024):

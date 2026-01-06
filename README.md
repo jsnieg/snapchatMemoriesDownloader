@@ -1,5 +1,5 @@
-# Snapchat Memories Processor
-Python script to download your Snapchat memories by locally hosting HTTP server with memories accessible and move them to your desired folder.
+# Snapchat Memories Retriever
+Python script to download your Snapchat memories when *you* download *your* data and choose what directory you wish to move them into.
 
 ## Prerequisites
 Before downloading your data you must request your memories through Snapchat. Below you'll find steps through Computer Browser you must complete to obtain your memories.
@@ -16,6 +16,10 @@ After obtaining your data you only have 7 days to let this script run downloadin
 ![?](/assets/imageFinished.png)
 
 4. Followed by **e-mail** from Snapchat with a instructions to download your memories in `mydata_<numbers>.zip` file.
+
+## Usage
+If using command-line:
+- `python3 -m src.main --t "test_directory"`
 
 ## Running from Source
 
