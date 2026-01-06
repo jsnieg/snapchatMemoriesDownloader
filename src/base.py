@@ -114,7 +114,7 @@ def run_server(config: Config) -> None:
 
 
 def extract_content(config: Config) -> str | Tag:
-    """Extracts content of a webpage and returns found tags using BeautifulSoup4."""
+    """Extracts content of a webpage and returns found tags 'a' in the 'tbody' that consist of potential url links to download from using BeautifulSoup4."""
     page: str = get_webpage_response(config.memories, True)
     soup = BeautifulSoup(markup=page.text, features=config.feature_parser)
     table = soup.find('tbody')
