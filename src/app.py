@@ -1,17 +1,15 @@
 # App with UI from Tkinter
 
-from tkinter import *
-from tkinter import ttk
+import tkinter as tk
+from tkinter import filedialog
 
 
 class App():
     ...
 
 
-root = Tk()
-frm = ttk.Frame(root, padding=10)
-frm.grid()
-frm.grid()
-ttk.Label(frm, text="Hello, World!").grid(column=0, row=0)
-ttk.Button(frm, text="Quit", command=root.destroy).grid(column=1, row=0)
-root.mainloop()
+root = tk.Tk()
+root.withdraw()
+
+file_path = filedialog.askopenfilename()
+print(file_path)

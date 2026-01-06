@@ -33,6 +33,7 @@ class Config:
     port: int = 8000
     directory: str = '../mydata'
     memories: str = f'http://localhost:{port}/html/memories_history.html'
+    feature_parser: str = 'html.parser'
     source_dir: str = '../files'
     target_dir: str = '?'
 
@@ -112,17 +113,22 @@ def run_server(config: Config) -> None:
     http_server.serve_forever()
 
 
+def extract_content(config: Config) -> str | Tag:
+    """Extracts content of a webpage and returns found tags using BeautifulSoup4."""
+    page: str = get_webpage_response(config.memories, True)
+    soup = BeautifulSoup(markup=page.text, features=config.feature_parser)
+    table = soup.find('tbody')
+    tags = table.find_all_next('a')
+    return tags
+
 def run_beautiful_soup(config: Config) -> None:
     """The brains behind this script. Runs BS4, looping through raw HTML finding all tags required to find download links. Creates new Thread instance working separately."""
     time.sleep(1.5)
-    page: str = get_webpage_response(config.memories, True)
-    soup = BeautifulSoup(markup=page.text, features='html.parser')
-    table = soup.find("tbody")
-    a_tags = table.find_all_next('a')
-    print(f'Found {len(a_tags)} images and videos!')
-    for tags in a_tags:
-        tag = tags.get('onclick')
-        urls.append(get_raw_links(tag))
+    tags = extract_content(config)
+    print(f'Found {len(tags)} images and videos!')
+    for tag in tags:
+        t = tag.get('onclick')
+        urls.append(get_raw_links(t))
     # for url in urls:
     #     download(config, url)
     download(config, urls[0])
