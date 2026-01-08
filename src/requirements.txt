@@ -1,0 +1,4 @@
+# Install all required packages to run this script from source
+beautifulsoup4
+statx
+tqdm

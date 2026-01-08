@@ -4,12 +4,11 @@ import tkinter as tk
 from tkinter import filedialog
 
 
-class App():
-    ...
-  
-    
+# create only once not upon func invoke everytime
 root = tk.Tk()
-root.withdraw()
 
-file_path = filedialog.askopenfilename()
-print(file_path)
+
+def show_window():
+    root.withdraw()
+    file_path = filedialog.askopenfilename()
+    return file_path

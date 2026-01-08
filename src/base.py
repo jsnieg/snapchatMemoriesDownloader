@@ -42,7 +42,7 @@ class Config:
 
 
 class quietServer(SimpleHTTPRequestHandler):
-    """Classs inherting to silence the HTTP server's logs."""
+    """Class inherting to silence the HTTP server's logs."""
     def log_message(self, format, *args):
         pass
 
@@ -74,24 +74,32 @@ def dir_modified_date(config: Config) -> timedelta:
     return now - directory_date
 
 
-def check_directory(config: Config) -> None:
-    """Function to check if directory is not older than 7 days and whether it does exist."""
-    print(config.target_dir)
-
+def check_directories(config: Config) -> None:
+    """Function to check few things: 
+    
+    1. Make new directory named files in prior directory than to this script if it does not exist.
+    
+    2. If mydata directory was not found at all.
+    
+    3. If directory is not older than 7 days and whether it does exist.
+    
+    All will assert False if something is not found, driven by idea of TDD."""
+    if config.target_dir == "":
+        assert False, "Target directory to where you wish to move your files to after memories are downloaded was not specified."
+    
     directory_date = dir_modified_date(config)
 
+    # If source directory does not exist to where files will move to...
     if not os.path.exists(config.source_dir):
         os.makedirs(config.source_dir)
 
-    if os.path.isdir(config.directory):
-        assert True
-    else:
+    # If 'mydata' directory was not found...
+    if not os.path.isdir(config.directory):
         assert False, f"{config.directory} has not been found, make sure you've requested your data from Snapchat and that it is inside your designated directory."
 
+    # If 'mydata' directory is older than 7 days...
     if directory_date.days >= 7:
         assert False, f'{config.directory} is older than 7 days, meaning your data is no longer available to download. Please request new data from Snapchat.'
-    else:
-        assert True, f'{config.directory} is not older than 7 days.'
 
 
 def get_raw_links(tag: Tag) -> str:
@@ -110,7 +118,7 @@ def get_webpage_response(url: str, once: bool, stream: bool = False) -> Response
     # time.sleep(delay)
     if res.status_code != 200:
         print(f"Status code: {res.status_code}\n")
-        print(res.headers)
+        assert False, f"Please restart your program.\nOr if problem persists request your Snapchat data again and download it.\n{res.headers}"
     else:
         return res
 
