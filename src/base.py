@@ -31,14 +31,18 @@ total_length: int = 0
 @dataclass
 class Config:
     port: int = 8000
+    # Directory of memories saved.
     directory: str = '../mydata'
-    memories: str = f'http://localhost:{port}/html/memories_history.html'
+    # Downloaded files.
     source_dir: str = '../files'
+    # Where your files will go to after download and as you invoke moving files.
     target_dir: str = '?'
+    memories: str = f'http://localhost:{port}/html/memories_history.html'
+    feature_parser: str = 'html.parser'
 
 
 class quietServer(SimpleHTTPRequestHandler):
-    """Classs inherting to silence the HTTP server's logs."""
+    """Class inherting to silence the HTTP server's logs."""
     def log_message(self, format, *args):
         pass
 
@@ -70,19 +74,32 @@ def dir_modified_date(config: Config) -> timedelta:
     return now - directory_date
 
 
-def check_directory(config: Config) -> None:
-    """Function to check if directory is not older than 7 days and whether it does exist."""
+def check_directories(config: Config) -> None:
+    """Function to check few things: 
+    
+    1. Make new directory named files in prior directory than to this script if it does not exist.
+    
+    2. If mydata directory was not found at all.
+    
+    3. If directory is not older than 7 days and whether it does exist.
+    
+    All will assert False if something is not found, driven by idea of TDD."""
+    if config.target_dir == "":
+        assert False, "Target directory to where you wish to move your files to after memories are downloaded was not specified."
+    
     directory_date = dir_modified_date(config)
 
-    if os.path.isdir(config.directory):
-        assert True
-    else:
+    # If source directory does not exist to where files will move to...
+    if not os.path.exists(config.source_dir):
+        os.makedirs(config.source_dir)
+
+    # If 'mydata' directory was not found...
+    if not os.path.isdir(config.directory):
         assert False, f"{config.directory} has not been found, make sure you've requested your data from Snapchat and that it is inside your designated directory."
 
+    # If 'mydata' directory is older than 7 days...
     if directory_date.days >= 7:
         assert False, f'{config.directory} is older than 7 days, meaning your data is no longer available to download. Please request new data from Snapchat.'
-    else:
-        assert True, f'{config.directory} is not older than 7 days.'
 
 
 def get_raw_links(tag: Tag) -> str:
@@ -101,7 +118,7 @@ def get_webpage_response(url: str, once: bool, stream: bool = False) -> Response
     # time.sleep(delay)
     if res.status_code != 200:
         print(f"Status code: {res.status_code}\n")
-        print(res.headers)
+        assert False, f"Please restart your program.\nOr if problem persists request your Snapchat data again and download it.\n{res.headers}"
     else:
         return res
 
@@ -112,17 +129,22 @@ def run_server(config: Config) -> None:
     http_server.serve_forever()
 
 
+def extract_content(config: Config) -> str | Tag:
+    """Extracts content of a webpage and returns found tags 'a' in the 'tbody' that consist of potential url links to download from using BeautifulSoup4."""
+    page: str = get_webpage_response(config.memories, True)
+    soup = BeautifulSoup(markup=page.text, features=config.feature_parser)
+    table = soup.find('tbody')
+    tags = table.find_all_next('a')
+    return tags
+
 def run_beautiful_soup(config: Config) -> None:
     """The brains behind this script. Runs BS4, looping through raw HTML finding all tags required to find download links. Creates new Thread instance working separately."""
     time.sleep(1.5)
-    page: str = get_webpage_response(config.memories, True)
-    soup = BeautifulSoup(markup=page.text, features='html.parser')
-    table = soup.find("tbody")
-    a_tags = table.find_all_next('a')
-    print(f'Found {len(a_tags)} images and videos!')
-    for tags in a_tags:
-        tag = tags.get('onclick')
-        urls.append(get_raw_links(tag))
+    tags = extract_content(config)
+    print(f'Found {len(tags)} images and videos!')
+    for tag in tags:
+        t = tag.get('onclick')
+        urls.append(get_raw_links(t))
     # for url in urls:
     #     download(config, url)
     download(config, urls[0])
@@ -136,8 +158,6 @@ def download(config: Config, url: str) -> None:
     current_length: int = int(res.headers['Content-Length'])
     # total_length += current_length
     file_name: str = content_name.split(";")[1].split('=')[1].strip('"') # I could've used regex here, but I already did so enjoy this.
-    if not os.path.exists(config.source_dir):
-        os.makedirs(config.source_dir)
     with open(f'{config.source_dir}/{file_name}', 'wb') as f:
         print(f'Downloading {file_name}...')
         for chunk in res.iter_content(chunk_size=1024):
@@ -146,6 +166,14 @@ def download(config: Config, url: str) -> None:
                 f.flush()
     print('Download completed. Moving files to...')
     move_files()
+
+
+def move_files_linux():
+    ...
+
+
+def move_files_windows():
+    ...
 
 
 def move_files() -> None:
